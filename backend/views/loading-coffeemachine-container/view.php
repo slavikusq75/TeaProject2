@@ -4,13 +4,13 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /* @var $this yii\web\View */
-/* @var $model common\models\LoadingCoffeemachineContainer */
+/* @var $model common\models\Inventory */
 
 $this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Loading Coffeemachine Containers'), 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Inventories'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="loading-coffeemachine-container-view">
+<div class="inventory-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -29,14 +29,15 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'quantity',
+            'actual_balance',
+            'account_balance',
             'created_at',
             'updated_at',
+            'inventory_act_number',
+            'inventory_act_date',
             'user_id',
             'goods_purchased_id',
             'goods_purchased_sort_id',
-            'coffeemachine_container_id',
-            'departament_id',
         ],
     ]) ?>
 
