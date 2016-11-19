@@ -1,48 +1,55 @@
 <?php
+
 namespace common\models;
 
 use Yii;
-use yii\base\NotSupportedException;
-use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
-use yii\web\IdentityInterface;
 
 /**
- * User model
+ * This is the model class for table "user".
  *
  * @property integer $id
  * @property string $username
+ * @property string $auth_key
  * @property string $password_hash
  * @property string $password_reset_token
  * @property string $email
- * @property string $auth_key
  * @property integer $status
  * @property integer $created_at
  * @property integer $updated_at
- * @property string $password write-only password
+ * @property string $firstname
+ * @property string $lastname
+ *
+ * @property BusinessDay[] $businessDays
+ * @property CashTransaction[] $cashTransactions
+ * @property CashTransactionReason[] $cashTransactionReasons
+ * @property CoffeemachineContainer[] $coffeemachineContainers
+ * @property Departament[] $departaments
+ * @property Discount[] $discounts
+ * @property GoodsPurchased[] $goodsPurchaseds
+ * @property GoodsPurchasedSort[] $goodsPurchasedSorts
+ * @property Inventory[] $inventories
+ * @property LoadingCoffeemachineContainer[] $loadingCoffeemachineContainers
+ * @property Measure[] $measures
+ * @property OurGoods[] $ourGoods
+ * @property OurGoodsSort[] $ourGoodsSorts
+ * @property OurGoodsSortConsist[] $ourGoodsSortConsists
+ * @property OurGoodsSortVolumeInfo[] $ourGoodsSortVolumeInfos
+ * @property OutgoingCoffeemachineContainer[] $outgoingCoffeemachineContainers
+ * @property OutgoingGoodsPurchasedSort[] $outgoingGoodsPurchasedSorts
+ * @property PriceOurGoodsSort[] $priceOurGoodsSorts
+ * @property Provider[] $providers
+ * @property ReceivingGoodsPurchasedSort[] $receivingGoodsPurchasedSorts
+ * @property SellingOurGoodsSort[] $sellingOurGoodsSorts
+ * @property VolumeInfo[] $volumeInfos
  */
-class User extends ActiveRecord implements IdentityInterface
+class User extends \yii\db\ActiveRecord
 {
-    const STATUS_DELETED = 0;
-    const STATUS_ACTIVE = 10;
-
-
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return '{{%user}}';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::className(),
-        ];
+        return 'user';
     }
 
     /**
@@ -51,139 +58,209 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
-            ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            [['username', 'auth_key', 'password_hash', 'email', 'created_at', 'updated_at', 'firstname', 'lastname'], 'required'],
+            [['status', 'created_at', 'updated_at'], 'integer'],
+            [['username', 'password_hash', 'password_reset_token', 'email', 'firstname', 'lastname'], 'string', 'max' => 255],
+            [['auth_key'], 'string', 'max' => 32],
+            [['username'], 'unique'],
+            [['email'], 'unique'],
+            [['password_reset_token'], 'unique'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public static function findIdentity($id)
+    public function attributeLabels()
     {
-        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
+        return [
+            'id' => 'ID',
+            'username' => 'Username',
+            'auth_key' => 'Auth Key',
+            'password_hash' => 'Password Hash',
+            'password_reset_token' => 'Password Reset Token',
+            'email' => 'Email',
+            'status' => 'Status',
+            'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
+            'firstname' => 'Firstname',
+            'lastname' => 'Lastname',
+        ];
     }
 
     /**
-     * @inheritdoc
+     * @return \yii\db\ActiveQuery
      */
-    public static function findIdentityByAccessToken($token, $type = null)
+    public function getBusinessDays()
     {
-        throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
+        return $this->hasMany(BusinessDay::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
+     * @return \yii\db\ActiveQuery
      */
-    public static function findByUsername($username)
+    public function getCashTransactions()
     {
-        return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+        return $this->hasMany(CashTransaction::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Finds user by password reset token
-     *
-     * @param string $token password reset token
-     * @return static|null
+     * @return \yii\db\ActiveQuery
      */
-    public static function findByPasswordResetToken($token)
+    public function getCashTransactionReasons()
     {
-        if (!static::isPasswordResetTokenValid($token)) {
-            return null;
-        }
-
-        return static::findOne([
-            'password_reset_token' => $token,
-            'status' => self::STATUS_ACTIVE,
-        ]);
+        return $this->hasMany(CashTransactionReason::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Finds out if password reset token is valid
-     *
-     * @param string $token password reset token
-     * @return bool
+     * @return \yii\db\ActiveQuery
      */
-    public static function isPasswordResetTokenValid($token)
+    public function getCoffeemachineContainers()
     {
-        if (empty($token)) {
-            return false;
-        }
-
-        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
-        $expire = Yii::$app->params['user.passwordResetTokenExpire'];
-        return $timestamp + $expire >= time();
+        return $this->hasMany(CoffeemachineContainer::className(), ['user_id' => 'id']);
     }
 
     /**
-     * @inheritdoc
+     * @return \yii\db\ActiveQuery
      */
-    public function getId()
+    public function getDepartaments()
     {
-        return $this->getPrimaryKey();
+        return $this->hasMany(Departament::className(), ['user_id' => 'id']);
     }
 
     /**
-     * @inheritdoc
+     * @return \yii\db\ActiveQuery
      */
-    public function getAuthKey()
+    public function getDiscounts()
     {
-        return $this->auth_key;
+        return $this->hasMany(Discount::className(), ['user_id' => 'id']);
     }
 
     /**
-     * @inheritdoc
+     * @return \yii\db\ActiveQuery
      */
-    public function validateAuthKey($authKey)
+    public function getGoodsPurchaseds()
     {
-        return $this->getAuthKey() === $authKey;
+        return $this->hasMany(GoodsPurchased::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
+     * @return \yii\db\ActiveQuery
      */
-    public function validatePassword($password)
+    public function getGoodsPurchasedSorts()
     {
-        return Yii::$app->security->validatePassword($password, $this->password_hash);
+        return $this->hasMany(GoodsPurchasedSort::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Generates password hash from password and sets it to the model
-     *
-     * @param string $password
+     * @return \yii\db\ActiveQuery
      */
-    public function setPassword($password)
+    public function getInventories()
     {
-        $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+        return $this->hasMany(Inventory::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Generates "remember me" authentication key
+     * @return \yii\db\ActiveQuery
      */
-    public function generateAuthKey()
+    public function getLoadingCoffeemachineContainers()
     {
-        $this->auth_key = Yii::$app->security->generateRandomString();
+        return $this->hasMany(LoadingCoffeemachineContainer::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Generates new password reset token
+     * @return \yii\db\ActiveQuery
      */
-    public function generatePasswordResetToken()
+    public function getMeasures()
     {
-        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
+        return $this->hasMany(Measure::className(), ['user_id' => 'id']);
     }
 
     /**
-     * Removes password reset token
+     * @return \yii\db\ActiveQuery
      */
-    public function removePasswordResetToken()
+    public function getOurGoods()
     {
-        $this->password_reset_token = null;
+        return $this->hasMany(OurGoods::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getOurGoodsSorts()
+    {
+        return $this->hasMany(OurGoodsSort::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getOurGoodsSortConsists()
+    {
+        return $this->hasMany(OurGoodsSortConsist::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getOurGoodsSortVolumeInfos()
+    {
+        return $this->hasMany(OurGoodsSortVolumeInfo::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getOutgoingCoffeemachineContainers()
+    {
+        return $this->hasMany(OutgoingCoffeemachineContainer::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getOutgoingGoodsPurchasedSorts()
+    {
+        return $this->hasMany(OutgoingGoodsPurchasedSort::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPriceOurGoodsSorts()
+    {
+        return $this->hasMany(PriceOurGoodsSort::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProviders()
+    {
+        return $this->hasMany(Provider::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getReceivingGoodsPurchasedSorts()
+    {
+        return $this->hasMany(ReceivingGoodsPurchasedSort::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getSellingOurGoodsSorts()
+    {
+        return $this->hasMany(SellingOurGoodsSort::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getVolumeInfos()
+    {
+        return $this->hasMany(VolumeInfo::className(), ['user_id' => 'id']);
     }
 }
