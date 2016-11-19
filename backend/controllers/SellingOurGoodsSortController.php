@@ -8,6 +8,7 @@ use common\models\SellingOurGoodsSortSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use common\models\OurGoods;
 
 /**
  * SellingOurGoodsSortController implements the CRUD actions for SellingOurGoodsSort model.
@@ -64,12 +65,14 @@ class SellingOurGoodsSortController extends Controller
     public function actionCreate()
     {
         $model = new SellingOurGoodsSort();
+        $modelsOurGoods = [new OurGoods];
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('create', [
                 'model' => $model,
+                'modelsOurGoods' => (empty($modelsOurGoods)) ? [new OurGoods] : $modelsOurGoods
             ]);
         }
     }
